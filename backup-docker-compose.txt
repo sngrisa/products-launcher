@@ -1,0 +1,39 @@
+
+ products-ms:
+    build: ./products-ms
+    ports:
+      - 3001:3001
+    volumes:
+      - ./products-ms/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - PORT=3001
+      - NATS_SERVERS=nats://nats_server:4222
+      - DATABASE_URL="file:./dev.db"
+
+
+
+orders-ms:
+    build: ./orders-ms
+    depends_on: 
+      - orders_db
+    volumes:
+      - ./orders-ms/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - PORT=3002
+      - DATABASE_URL="postgresql://postgres:123456@orders_db:5432/orders_db?schema=public"
+      - NATS_SERVERS=nats://nats-server:4222
+
+  orders_db:
+    image: postgres:16.2
+    container_name: orders_database
+    restart: always
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=orders_db
